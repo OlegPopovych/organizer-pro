@@ -1,31 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Todo } from '../types/Todo';
-import { TodosState } from '../types/TodosState';
-import { FormState } from '../types/FormState';
-import { Dispatchers } from '../types/enums/Dispatchers';
-import {
-  getTodos,
-  addTodo,
-  deleteTodo,
-  updateTodo,
-} from '../api/todos';
-import { Errors } from '../types/enums/Errors';
-import { Actions } from '../types/Actions';
+import React, { useEffect, useRef, useState } from "react";
+import { Todo } from "../types/Todo";
+import { TodosState } from "../types/TodosState";
+import { FormState } from "../types/FormState";
+import { Dispatchers } from "../types/enums/Dispatchers";
+import { getTodos, addTodo, deleteTodo, updateTodo } from "../api/todos";
+import { Errors } from "../types/enums/Errors";
+import { Actions } from "../types/Actions";
 
 const USER_ID = 11806;
 
 // #region Initials
 const initialTodosState: TodosState = {
   todos: [],
-  dispatcher: () => { },
+  dispatcher: () => {},
   errorType: null,
   tempTodo: null,
   activeTodoIds: [],
-  clearErrorMessage: () => { },
+  clearErrorMessage: () => {},
 };
 
 const initialFormState: FormState = {
-  formValue: '',
+  formValue: "",
   onSetFormValue: () => [],
   disabledInput: false,
   inputRef: null,
@@ -38,14 +33,14 @@ export const TodosContext = React.createContext(initialTodosState);
 export const FormControlContext = React.createContext(initialFormState);
 
 type Props = {
-  children: React.ReactNode,
+  children: React.ReactNode;
 };
 
 export const GlobalProvider: React.FC<Props> = ({ children }) => {
   const [todos, setTodos] = useState<Todo[]>(localInitial);
   const [errorType, setErrorType] = useState<Errors | null>(null);
 
-  const [formValue, setFormValue] = useState('');
+  const [formValue, setFormValue] = useState("");
   const [disabledInput, setDisabled] = useState(false);
 
   const [activeTodoIds, setActiveTodoIds] = useState<number[]>([]);
@@ -54,10 +49,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [
-    tempTodo,
-    setTempTodo,
-  ] = useState<Todo | null>(null);
+  const [tempTodo, setTempTodo] = useState<Todo | null>(null);
 
   const newErrorTimeout = (errorName: Errors) => {
     setErrorType(errorName);
@@ -92,91 +84,90 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
 
         break;
 
-      case Dispatchers.Add: {
-        const createdTodo = action.payload;
+      case Dispatchers.Add:
+        {
+          const createdTodo = action.payload;
 
-        if (!createdTodo.title) {
-          newErrorTimeout(Errors.EMPTY);
+          if (!createdTodo.title) {
+            newErrorTimeout(Errors.EMPTY);
 
-          return;
+            return;
+          }
+
+          setDisabled(true);
+
+          setTempTodo({
+            ...createdTodo,
+            id: 0,
+            updatedAt: "",
+            createdAt: "",
+          });
+
+          try {
+            const newTodo = await addTodo(action.payload);
+
+            setTodos([...state, newTodo]);
+            setTempTodo(null);
+            setFormValue("");
+          } catch (error) {
+            setTempTodo(null);
+            newErrorTimeout(Errors.POST);
+          } finally {
+            setDisabled(false);
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.focus();
+              }
+            }, 0);
+          }
         }
-
-        setDisabled(true);
-
-        setTempTodo({
-          ...createdTodo,
-          id: 0,
-          updatedAt: '',
-          createdAt: '',
-        });
-
-        try {
-          const newTodo = await addTodo(action.payload);
-
-          setTodos([
-            ...state,
-            newTodo,
-          ]);
-          setTempTodo(null);
-          setFormValue('');
-        } catch (error) {
-          setTempTodo(null);
-          newErrorTimeout(Errors.POST);
-        } finally {
-          setDisabled(false);
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, 0);
-        }
-      }
 
         break;
 
-      case Dispatchers.DeleteComplited: {
-        const todosIds = [...state]
-          .filter(todo => todo.completed)
-          .map(todo => todo.id);
+      case Dispatchers.DeleteComplited:
+        {
+          const todosIds = [...state]
+            .filter((todo) => todo.completed)
+            .map((todo) => todo.id);
 
-        setActiveTodoIds(prev => [...prev, ...todosIds]);
+          setActiveTodoIds((prev) => [...prev, ...todosIds]);
 
-        Promise
-          .allSettled(todosIds.map(id => deleteTodo(id)))
-          .then(res => {
-            res.forEach((result, index) => {
-              if (result.status === 'fulfilled') {
-                setTodos(prev => [...prev]
-                  .filter(todo => todo.id !== todosIds[index]));
-              }
+          Promise.allSettled(todosIds.map((id) => deleteTodo(id)))
+            .then((res) => {
+              res.forEach((result, index) => {
+                if (result.status === "fulfilled") {
+                  setTodos((prev) =>
+                    [...prev].filter((todo) => todo.id !== todosIds[index])
+                  );
+                }
 
-              if (result.status === 'rejected') {
-                newErrorTimeout(Errors.DELETE);
+                if (result.status === "rejected") {
+                  newErrorTimeout(Errors.DELETE);
+                }
+              });
+            })
+            .finally(() => {
+              setActiveTodoIds([]);
+              if (inputRef.current) {
+                inputRef.current.focus();
               }
             });
-          })
-          .finally(() => {
-            setActiveTodoIds([]);
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          });
-      }
+        }
 
         break;
 
       case Dispatchers.DeleteWithId:
-        setActiveTodoIds(prev => [...prev, action.payload]);
+        setActiveTodoIds((prev) => [...prev, action.payload]);
 
         try {
           await deleteTodo(action.payload);
 
-          setTodos([...state].filter(todo => todo.id !== action.payload));
+          setTodos([...state].filter((todo) => todo.id !== action.payload));
         } catch (error) {
           newErrorTimeout(Errors.DELETE);
         } finally {
-          setActiveTodoIds(
-            prev => [...prev].filter(id => id !== action.payload),
+          setActiveTodoIds((prev) =>
+            [...prev].filter((id) => id !== action.payload)
           );
           if (inputRef.current) {
             inputRef.current.focus();
@@ -185,71 +176,79 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
 
         break;
 
-      case Dispatchers.UpdateTodo: {
-        const { id } = action.payload;
+      case Dispatchers.UpdateTodo:
+        {
+          const { id } = action.payload;
 
-        setActiveTodoIds(prev => [...prev, id]);
+          setActiveTodoIds((prev) => [...prev, id]);
 
-        let updatedTodo: Todo;
+          let updatedTodo: Todo;
 
-        try {
-          if ('title' in action.payload) {
-            const { title } = action.payload;
+          try {
+            if ("title" in action.payload) {
+              const { title } = action.payload;
 
-            updatedTodo = await updateTodo(id, { title });
-          }
-
-          if ('completed' in action.payload) {
-            const { completed } = action.payload;
-
-            updatedTodo = await updateTodo(id, { completed: !completed });
-          }
-
-          setTodos([...state].map(todo => {
-            if (todo.id === updatedTodo.id) {
-              return updatedTodo;
+              updatedTodo = await updateTodo(id, { title });
             }
 
-            return todo;
-          }));
-        } catch (error) {
-          newErrorTimeout(Errors.PATCH);
-        } finally {
-          setActiveTodoIds(
-            prev => [...prev].filter(idInList => idInList !== id),
-          );
+            if ("completed" in action.payload) {
+              const { completed } = action.payload;
+
+              updatedTodo = await updateTodo(id, { completed: !completed });
+            }
+
+            setTodos(
+              [...state].map((todo) => {
+                if (todo.id === updatedTodo.id) {
+                  return updatedTodo;
+                }
+
+                return todo;
+              })
+            );
+          } catch (error) {
+            newErrorTimeout(Errors.PATCH);
+          } finally {
+            setActiveTodoIds((prev) =>
+              [...prev].filter((idInList) => idInList !== id)
+            );
+          }
         }
-      }
 
         break;
 
-      case Dispatchers.ChangeAllStatuses: {
-        const todosIds = [...state]
-          .filter(todo => todo.completed !== action.payload)
-          .map(todo => todo.id);
+      case Dispatchers.ChangeAllStatuses:
+        {
+          const todosIds = [...state]
+            .filter((todo) => todo.completed !== action.payload)
+            .map((todo) => todo.id);
 
-        setActiveTodoIds(prev => [...prev, ...todosIds]);
+          setActiveTodoIds((prev) => [...prev, ...todosIds]);
 
-        try {
-          await Promise
-            .all(todosIds
-              .map(id => updateTodo(id, { completed: action.payload })));
+          try {
+            await Promise.all(
+              todosIds.map((id) =>
+                updateTodo(id, { completed: action.payload })
+              )
+            );
 
-          setTodos([...state].map(todo => {
-            return {
-              ...todo,
-              completed: action.payload,
-            };
-          }));
-        } catch (err) {
-          newErrorTimeout(Errors.PATCH);
-        } finally {
-          setActiveTodoIds([]);
-          if (inputRef.current) {
-            inputRef.current.focus();
+            setTodos(
+              [...state].map((todo) => {
+                return {
+                  ...todo,
+                  completed: action.payload,
+                };
+              })
+            );
+          } catch (err) {
+            newErrorTimeout(Errors.PATCH);
+          } finally {
+            setActiveTodoIds([]);
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
           }
         }
-      }
 
         break;
 
@@ -281,12 +280,13 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
         clearErrorMessage,
       }}
     >
-      <FormControlContext.Provider value={{
-        formValue,
-        onSetFormValue,
-        disabledInput,
-        inputRef,
-      }}
+      <FormControlContext.Provider
+        value={{
+          formValue,
+          onSetFormValue,
+          disabledInput,
+          inputRef,
+        }}
       >
         {children}
       </FormControlContext.Provider>

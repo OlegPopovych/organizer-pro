@@ -26,7 +26,7 @@ export const TodoFilter: React.FC<Props> = ({
 
   const handleDeleteComplited = () => {
     dispatcher({ type: Dispatchers.DeleteComplited });
-  };
+  }
 
   const count = todos.filter(todo => !todo.completed).length;
 
