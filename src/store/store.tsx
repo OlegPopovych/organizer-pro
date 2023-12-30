@@ -1,11 +1,14 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Todo } from "../types/Todo";
-import { TodosState } from "../types/TodosState";
-import { FormState } from "../types/FormState";
-import { Dispatchers } from "../types/enums/Dispatchers";
-import { getTodos, addTodo, deleteTodo, updateTodo } from "../api/todos";
-import { Errors } from "../types/enums/Errors";
-import { Actions } from "../types/Actions";
+/* eslint-disable max-len */
+import React, { useEffect, useRef, useState } from 'react';
+import { Todo } from '../types/Todo';
+import { TodosState } from '../types/TodosState';
+import { FormState } from '../types/FormState';
+import { Dispatchers } from '../types/enums/Dispatchers';
+import {
+  getTodos, addTodo, deleteTodo, updateTodo,
+} from '../api/todos';
+import { Errors } from '../types/enums/Errors';
+import { Actions } from '../types/Actions';
 
 const USER_ID = 11806;
 
@@ -20,7 +23,7 @@ const initialTodosState: TodosState = {
 };
 
 const initialFormState: FormState = {
-  formValue: "",
+  formValue: '',
   onSetFormValue: () => [],
   disabledInput: false,
   inputRef: null,
@@ -40,7 +43,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
   const [todos, setTodos] = useState<Todo[]>(localInitial);
   const [errorType, setErrorType] = useState<Errors | null>(null);
 
-  const [formValue, setFormValue] = useState("");
+  const [formValue, setFormValue] = useState('');
   const [disabledInput, setDisabled] = useState(false);
 
   const [activeTodoIds, setActiveTodoIds] = useState<number[]>([]);
@@ -99,8 +102,8 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
           setTempTodo({
             ...createdTodo,
             id: 0,
-            updatedAt: "",
-            createdAt: "",
+            updatedAt: '',
+            createdAt: '',
           });
 
           try {
@@ -108,7 +111,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
 
             setTodos([...state, newTodo]);
             setTempTodo(null);
-            setFormValue("");
+            setFormValue('');
           } catch (error) {
             setTempTodo(null);
             newErrorTimeout(Errors.POST);
@@ -135,13 +138,11 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
           Promise.allSettled(todosIds.map((id) => deleteTodo(id)))
             .then((res) => {
               res.forEach((result, index) => {
-                if (result.status === "fulfilled") {
-                  setTodos((prev) =>
-                    [...prev].filter((todo) => todo.id !== todosIds[index])
-                  );
+                if (result.status === 'fulfilled') {
+                  setTodos((prev) => [...prev].filter((todo) => todo.id !== todosIds[index]));
                 }
 
-                if (result.status === "rejected") {
+                if (result.status === 'rejected') {
                   newErrorTimeout(Errors.DELETE);
                 }
               });
@@ -166,9 +167,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
         } catch (error) {
           newErrorTimeout(Errors.DELETE);
         } finally {
-          setActiveTodoIds((prev) =>
-            [...prev].filter((id) => id !== action.payload)
-          );
+          setActiveTodoIds((prev) => [...prev].filter((id) => id !== action.payload));
           if (inputRef.current) {
             inputRef.current.focus();
           }
@@ -185,13 +184,13 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
           let updatedTodo: Todo;
 
           try {
-            if ("title" in action.payload) {
+            if ('title' in action.payload) {
               const { title } = action.payload;
 
               updatedTodo = await updateTodo(id, { title });
             }
 
-            if ("completed" in action.payload) {
+            if ('completed' in action.payload) {
               const { completed } = action.payload;
 
               updatedTodo = await updateTodo(id, { completed: !completed });
@@ -204,14 +203,12 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
                 }
 
                 return todo;
-              })
+              }),
             );
           } catch (error) {
             newErrorTimeout(Errors.PATCH);
           } finally {
-            setActiveTodoIds((prev) =>
-              [...prev].filter((idInList) => idInList !== id)
-            );
+            setActiveTodoIds((prev) => [...prev].filter((idInList) => idInList !== id));
           }
         }
 
@@ -227,9 +224,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
 
           try {
             await Promise.all(
-              todosIds.map((id) =>
-                updateTodo(id, { completed: action.payload })
-              )
+              todosIds.map((id) => updateTodo(id, { completed: action.payload })),
             );
 
             setTodos(
@@ -238,7 +233,7 @@ export const GlobalProvider: React.FC<Props> = ({ children }) => {
                   ...todo,
                   completed: action.payload,
                 };
-              })
+              }),
             );
           } catch (err) {
             newErrorTimeout(Errors.PATCH);

@@ -1,15 +1,17 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useContext, useEffect, useState } from "react";
-import cn from "classnames";
-import { FormControlContext, TodosContext } from "../../store/store";
-import { Dispatchers } from "../../types/enums/Dispatchers";
+import React, { useContext, useEffect, useState } from 'react';
+import cn from 'classnames';
+import { FormControlContext, TodosContext } from '../../store/store';
+import { Dispatchers } from '../../types/enums/Dispatchers';
 
 const USER_ID = 11806;
 
 export const Header: React.FC = () => {
   const { todos, dispatcher } = useContext(TodosContext);
-  const { formValue, onSetFormValue, disabledInput, inputRef } =
-    useContext(FormControlContext);
+  const {
+    formValue, onSetFormValue, disabledInput, inputRef,
+  }
+    = useContext(FormControlContext);
   const [isAllComplited, setIsAllComplited] = useState(false);
 
   const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,7 +50,7 @@ export const Header: React.FC = () => {
       {todos.length > 0 && (
         <button
           type="button"
-          className={cn("todoapp__toggle-all", { active: isAllComplited })}
+          className={cn('todoapp__toggle-all', { active: isAllComplited })}
           data-cy="ToggleAllButton"
           onClick={toggleAllStatuses}
         />
@@ -68,4 +70,4 @@ export const Header: React.FC = () => {
       </form>
     </header>
   );
-}
+};

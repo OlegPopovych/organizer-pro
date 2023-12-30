@@ -1,6 +1,6 @@
-import { Todo } from "./Todo";
-import { Actions } from "./Actions";
-import { Errors } from "./enums/Errors";
+import { Todo } from './Todo';
+import { Actions } from './Actions';
+import { Errors } from './enums/Errors';
 
 export interface TodosState {
   todos: Todo[];
